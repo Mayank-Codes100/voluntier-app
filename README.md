@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# VolunTier ⚡
+> A smart, unified local directory platform connecting NGOs with volunteers and resources intelligently.
 
-## Getting Started
+**Team Name:** Console.loggers
+**Team ID:** 859O6B
+**Theme Track Code:** #EDTECH-SOCIAL-IMPACT
+**PS REF:** #EDTECH-PS2 [BEGINNER]
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚨 Problem Statement and Solution Overview
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**The Problem:**
+Non-profit organizations (NGOs) constantly struggle to find reliable volunteers and necessary supplies to keep their operations running smoothly. Simultaneously, passionate individuals and potential volunteers struggle to find authentic, local NGOs where they can contribute their time and resources effectively. There is a massive communication and visibility gap in the community aid ecosystem.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+**The Solution (Community Aid Bridge):**
+VolunTier bridges this gap with a smart matching system. We provide a single directory platform with two powerful perspectives:
+1. **For NGOs:** A streamlined dashboard to post real-time needs (both services and material assets).
+2. **For Volunteers:** A gamified discovery portal to find local opportunities, contribute, and earn XP points. As volunteers help, they level up their dynamic tier rankings and earn official printable scroll certificates.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 💻 Tech Stack
+* **Frontend:** Next.js, React.js, Tailwind CSS
+* **Backend & Database:** Firebase (Authentication & Firestore)
+* **Deployment & Hosting:** Vercel
+* **Version Control:** Git, GitHub
 
-To learn more about Next.js, take a look at the following resources:
+---
+live link of website->   https://voluntier-app-tawny.vercel.app/
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+​🤖 AI Tools Disclosure Table 
+AI Tool UsedPurpose / Task Performed
+Google Gemini Assisted with Next.js logic, Firebase integration, deployment debugging on Vercel, and terminal error resolution Link to Tool -> .gemini.google.com
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+👥 Team Members and Roles
+​Mayank Saini - Lead Full Stack Developer (Next.js UI/UX implementation, Firebase Integration, and Vercel Deployment)
+Kuldeep Morane - testing and helping in UI.
