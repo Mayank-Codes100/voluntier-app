@@ -27,6 +27,24 @@ VolunTier bridges this gap with a smart matching system. We provide a single dir
 * **Version Control:** Git, GitHub
 
 ---
+
+## ⚙️ Core Architecture: Scalable Allocation Logic
+To ensure the platform is robust, modular, and ready for real-world scaling, we designed a dedicated backend allocation controller (`src/lib/allocation.js`) rather than handling logic directly inside UI components.
+
+### Handling Real-World Scenarios & Edge Cases
+When multiple volunteers attempt to claim the final open slot for an NGO requirement at the exact same time, a standard database write would result in over-booking. 
+
+To solve this concurrency issue, our system utilizes **Firestore Transactions**:
+1. **Atomic Reads/Writes:** The database locks the document, checks current capacity, and writes the new volunteer data in one single, unbreakable motion.
+2. **Double-Booking Prevention:** If a user tries to apply twice, or if the requirement reaches maximum capacity exactly as they click 'Apply', the transaction safely aborts and alerts the user gracefully on the frontend.
+3. **Separation of Concerns:** The UI layer (`Dashboard.js`) only handles state and user feedback, while the `allocation.js` module handles all database integrity and business rules.
+
+### Key Assumptions
+* **MVP Scope:** We assume all NGOs and volunteers operate within the same general timezone for this iteration.
+* **Manual Verification:** Currently, NGOs manually mark a volunteer's application as "Accepted" or "Rejected" upon reviewing their profile. Automatic allocation based on proximity or skill-matching is scoped for V2.
+* **Open Tiering:** All volunteers start at the Bronze tier and can immediately apply for any standard service gig without prerequisite screening.
+
+---
 live link of website->   https://voluntier-app-tawny.vercel.app/
 
 

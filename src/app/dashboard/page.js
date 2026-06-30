@@ -5,6 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, collection, addDoc, getDocs, query, where, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
+
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
@@ -127,40 +128,26 @@ export default function Dashboard() {
     }
   };
 
-  const handleApply = async (gig) => {
+const handleApply = async (gig) => {
+    // 1. Check local state first to prevent unnecessary database calls (Efficiency)
     if (appliedGigs.includes(gig.id)) {
       alert("You have already responded to this request!");
       return;
     }
 
     try {
-      let gigTypeToSave = 'service';
-      if (gig.type) {
-        gigTypeToSave = gig.type;
-      }
-
-      //  yaha database mein volunteer ka Name aur Phone no.  save hoga
-      await addDoc(collection(db, "applications"), {
-        gigId: gig.id,
-        gigTitle: gig.title,
-        gigType: gigTypeToSave,
-        volunteerEmail: user.email,
-        volunteerName: userData?.name || "Unknown User", // Name bhejenge
-        volunteerPhone: userData?.phone || "Not Provided", // Phone no. bhejenge
-        ngoEmail: gig.ngoEmail.trim().toLowerCase(),
-        status: 'pending', 
-        appliedAt: new Date()
-      });
+      // 2. Call the scalable, modular logic we built in allocation.js
+      const response = await allocateVolunteerToTask(gig, user.email, userData);
       
-      let applyMessage = "Successfully signed up for: " + gig.title;
-      if (gig.type === 'resource') {
-        applyMessage = "Thank you for pledging resources for: " + gig.title;
+      // 3. Handle the response gracefully without breaking the UI
+      if (response.success) {
+        alert(response.message);
+        setAppliedGigs([...appliedGigs, gig.id]); // Update UI instantly
+      } else {
+        alert(`Could not complete request: ${response.message}`);
       }
-      alert(applyMessage);
-
-      setAppliedGigs([...appliedGigs, gig.id]);
     } catch (error) {
-      alert("Error processing your request: " + error.message);
+      alert("System Error: " + error.message);
     }
   };
 
