@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react';
 import { auth, db } from '../../lib/firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, collection, addDoc, getDocs, query, where, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, getDocs, query, where, updateDoc, increment } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { allocateVolunteerToTask } from '../../lib/allocation'; // FIX 1: Import added
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -74,10 +75,10 @@ export default function Dashboard() {
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         
         if (userDoc.exists()) {
-          const dbData = userDoc.data(); //  Pura database record nikal liya isne
+          const dbData = userDoc.data(); 
           
           setRole(dbData.role);
-          setUserData(dbData); //  State mein Name, Phone, Email sab save hojayega
+          setUserData(dbData); 
           
           if (dbData.role === 'volunteer') {
             await fetchGigs();
@@ -134,41 +135,39 @@ export default function Dashboard() {
     }
 
     try {
-      let gigTypeToSave = 'service';
-      if (gig.type) {
-        gigTypeToSave = gig.type;
-      }
-
-      //  yaha database mein volunteer ka Name aur Phone no.  save hoga
-      await addDoc(collection(db, "applications"), {
-        gigId: gig.id,
-        gigTitle: gig.title,
-        gigType: gigTypeToSave,
-        volunteerEmail: user.email,
-        volunteerName: userData?.name || "Unknown User", // Name bhejenge
-        volunteerPhone: userData?.phone || "Not Provided", // Phone no. bhejenge
-        ngoEmail: gig.ngoEmail.trim().toLowerCase(),
-        status: 'pending', 
-        appliedAt: new Date()
-      });
+      const response = await allocateVolunteerToTask(gig, user.email, userData);
       
-      let applyMessage = "Successfully signed up for: " + gig.title;
-      if (gig.type === 'resource') {
-        applyMessage = "Thank you for pledging resources for: " + gig.title;
+      if (response.success) {
+        alert(response.message);
+        setAppliedGigs([...appliedGigs, gig.id]); 
+      } else {
+        alert(`Could not complete request: ${response.message}`);
       }
-      alert(applyMessage);
-
-      setAppliedGigs([...appliedGigs, gig.id]);
     } catch (error) {
-      alert("Error processing your request: " + error.message);
+      alert("System Error: " + error.message);
     }
   };
 
-  const handleStatusUpdate = async (appId, newStatus) => {
+  const handleStatusUpdate = async (app, newStatus) => {
     try {
-      const appRef = doc(db, "applications", appId);
+      const appRef = doc(db, "applications", app.id);
       await updateDoc(appRef, { status: newStatus });
-      alert("Application marked as " + newStatus + "!");
+      
+      if (newStatus === 'accepted' && app.volunteerEmail) {
+        const userQuery = query(collection(db, "users"), where("email", "==", app.volunteerEmail));
+        const querySnapshot = await getDocs(userQuery);
+        
+        if (!querySnapshot.empty) {
+          const volunteerDoc = querySnapshot.docs[0];
+          const volunteerRef = doc(db, "users", volunteerDoc.id);
+          
+          await updateDoc(volunteerRef, {
+            totalHours: increment(4) 
+          });
+        }
+      }
+
+      alert("Application marked as " + newStatus + (newStatus === 'accepted' ? " and XP awarded to volunteer!" : "!"));
       fetchNGOApplications(user.email); 
     } catch (error) {
       alert("Error updating status: " + error.message);
@@ -176,7 +175,7 @@ export default function Dashboard() {
   };
 
   //  UI HELPER VARIABLES & FUNCTIONS 
-  const totalHours = appliedGigs.length * 4; 
+  const totalHours = userData?.totalHours || 0; // FIX 2: Dynamic Database Hours Instead of Hardcoded Math
   const progressPercent = Math.min((totalHours / 40) * 100, 100);
   
   let hoursLeft = 40 - totalHours;
@@ -225,7 +224,6 @@ export default function Dashboard() {
       <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Welcome back!</h1>
-          {/* NAYA: Yahan ab User ka Name aayega (agar hoga toh), warna email */}
           <p className="text-sm text-gray-500 font-semibold">{userData?.name || user?.email} ({role?.toUpperCase()})</p>
         </div>
         <button 
@@ -343,7 +341,6 @@ export default function Dashboard() {
                         <p className="font-bold text-gray-800 mb-0.5">Title: {app.gigTitle}</p>
                         <p className="text-[11px] font-bold text-purple-600 uppercase mb-2">Type: {appTypeText}</p>
                         
-                        {/*  Yahan ab Volunteer ka Name, Email, aur Phone dikhega NGO ko */}
                         <div className="bg-white border rounded p-2 mb-3">
                           <p className="font-semibold text-gray-800 text-xs">👤 {app.volunteerName || "Unknown"}</p>
                           <p className="text-gray-500 text-[11px] mb-1">✉️ {app.volunteerEmail}</p>
@@ -359,8 +356,9 @@ export default function Dashboard() {
                       
                       {app.status === 'pending' && (
                         <div className="flex gap-2 mt-2">
-                          <button onClick={() => handleStatusUpdate(app.id, 'accepted')} className="flex-1 bg-green-600 text-white text-xs font-bold py-1.5 px-2 rounded hover:bg-green-700 transition">Accept</button>
-                          <button onClick={() => handleStatusUpdate(app.id, 'rejected')} className="flex-1 bg-red-500 text-white text-xs font-bold py-1.5 px-2 rounded hover:bg-red-600 transition">Reject</button>
+                          {/* FIX 3: Passed 'app' object directly instead of 'app.id' */}
+                          <button onClick={() => handleStatusUpdate(app, 'accepted')} className="flex-1 bg-green-600 text-white text-xs font-bold py-1.5 px-2 rounded hover:bg-green-700 transition">Accept</button>
+                          <button onClick={() => handleStatusUpdate(app, 'rejected')} className="flex-1 bg-red-500 text-white text-xs font-bold py-1.5 px-2 rounded hover:bg-red-600 transition">Reject</button>
                         </div>
                       )}
                     </div>
